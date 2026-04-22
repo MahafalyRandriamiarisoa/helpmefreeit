@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ArrowLeft, Home, RotateCw } from 'lucide-react'
 import { useScanner } from './hooks/useScanner'
-import { Toolbar } from './components/Toolbar'
+import { Toolbar, type ViewMode } from './components/Toolbar'
 import { Breadcrumb } from './components/Breadcrumb'
 import { Explorer } from './components/Explorer'
 import { Treemap } from './components/Treemap'
+import { DupesView } from './components/DupesView'
+import { StaleView } from './components/StaleView'
+import { CleanView } from './components/CleanView'
 import { ScanProgress } from './components/ScanProgress'
 import { formatSize } from './lib/format'
 import type {} from './lib/types' // import for global Window augmentation
@@ -16,7 +19,11 @@ export default function App() {
   const [includeFiles, setIncludeFiles] = useState(true)
   const [noCrossDevice, setNoCrossDevice] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [viewMode, setViewMode] = useState<'table' | 'treemap'>('table')
+  const [viewMode, setViewMode] = useState<ViewMode>('table')
+
+  // Les modes table/treemap explorent un dossier ; dupes/stale/clean sont des
+  // outils dédiés avec leur propre scan interne.
+  const isExploreMode = viewMode === 'table' || viewMode === 'treemap'
 
   const { scanning, progress, result, error, scan, cancel } = useScanner()
 
@@ -130,8 +137,8 @@ export default function App() {
           )}
         </div>
 
-        {/* Total size badge */}
-        {result && (
+        {/* Total size badge (mode explore uniquement) */}
+        {isExploreMode && result && (
           <div
             className="no-drag mono text-[10px] px-2 py-0.5 rounded"
             style={{ background: 'var(--bg-raised)', color: 'var(--text-secondary)' }}
@@ -156,8 +163,8 @@ export default function App() {
         onOpenDirectory={handleOpenDirectory}
       />
 
-      {/* ── Scan progress ── */}
-      {scanning && (
+      {/* ── Scan progress (mode explore uniquement) ── */}
+      {isExploreMode && scanning && (
         <ScanProgress
           scanned={progress?.scanned}
           total={progress?.total}
@@ -166,8 +173,8 @@ export default function App() {
         />
       )}
 
-      {/* ── Error ── */}
-      {error && (
+      {/* ── Error (mode explore uniquement ; les outils gèrent leurs erreurs en interne) ── */}
+      {isExploreMode && error && (
         <div
           className="px-4 py-2 text-xs"
           style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--color-size-huge)' }}
@@ -176,8 +183,8 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Welcome screen ── */}
-      {!currentPath && !scanning && (
+      {/* ── Welcome screen (mode explore, aucun dossier choisi) ── */}
+      {isExploreMode && !currentPath && !scanning && (
         <div className="flex-1 flex flex-col items-center justify-center gap-8">
           <div className="text-center">
             <h1
@@ -204,8 +211,8 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Content ── */}
-      {result && result.children.length > 0 && (
+      {/* ── Mode explore — rendu des vues du scan ── */}
+      {isExploreMode && result && result.children.length > 0 && (
         viewMode === 'table' ? (
           <Explorer
             entries={result.children}
@@ -224,8 +231,29 @@ export default function App() {
         )
       )}
 
-      {/* ── Status bar ── */}
-      {result && result.children.length > 0 && (
+      {/* ── Mode doublons ── */}
+      {viewMode === 'dupes' && (
+        <DupesView
+          defaultPath={currentPath ?? window.freeit.env.homedir}
+          className="flex-1 overflow-auto"
+        />
+      )}
+
+      {/* ── Mode fichiers anciens ── */}
+      {viewMode === 'stale' && (
+        <StaleView
+          defaultPath={currentPath ?? window.freeit.env.homedir}
+          className="flex-1 overflow-auto"
+        />
+      )}
+
+      {/* ── Mode nettoyage (presets junk) ── */}
+      {viewMode === 'clean' && (
+        <CleanView className="flex-1 overflow-auto" />
+      )}
+
+      {/* ── Status bar (mode explore uniquement) ── */}
+      {isExploreMode && result && result.children.length > 0 && (
         <div
           className="flex items-center justify-between px-4 shrink-0"
           style={{

@@ -1,6 +1,9 @@
 import {
-  Eye, EyeOff, File, Folder, HardDrive, Search, X, LayoutGrid, List
+  Eye, EyeOff, File, Folder, HardDrive, Search, X, LayoutGrid, List,
+  Copy, Clock, Sparkles,
 } from 'lucide-react'
+
+export type ViewMode = 'table' | 'treemap' | 'dupes' | 'stale' | 'clean'
 
 interface ToolbarProps {
   includeHidden: boolean
@@ -11,8 +14,8 @@ interface ToolbarProps {
   setNoCrossDevice: (v: boolean) => void
   searchQuery: string
   setSearchQuery: (v: string) => void
-  viewMode: 'table' | 'treemap'
-  setViewMode: (v: 'table' | 'treemap') => void
+  viewMode: ViewMode
+  setViewMode: (v: ViewMode) => void
   onOpenDirectory: () => void
 }
 
@@ -88,6 +91,36 @@ export function Toolbar({
           <LayoutGrid size={13} />
         </button>
       </div>
+
+      <div className="sep" />
+
+      <button
+        onClick={() => setViewMode('dupes')}
+        className="btn-pill"
+        data-active={viewMode === 'dupes'}
+        title="Doublons — trouver les fichiers identiques"
+      >
+        <Copy size={12} />
+        <span className="hidden sm:inline">Doublons</span>
+      </button>
+      <button
+        onClick={() => setViewMode('stale')}
+        className="btn-pill"
+        data-active={viewMode === 'stale'}
+        title="Fichiers anciens et volumineux"
+      >
+        <Clock size={12} />
+        <span className="hidden sm:inline">Anciens</span>
+      </button>
+      <button
+        onClick={() => setViewMode('clean')}
+        className="btn-pill"
+        data-active={viewMode === 'clean'}
+        title="Nettoyage — caches, node_modules, …"
+      >
+        <Sparkles size={12} />
+        <span className="hidden sm:inline">Nettoyage</span>
+      </button>
 
       <div className="flex-1" />
 
