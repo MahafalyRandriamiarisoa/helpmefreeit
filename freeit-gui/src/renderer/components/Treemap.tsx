@@ -1,8 +1,10 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react'
-import { treemap, hierarchy, treemapSquarify } from 'd3-hierarchy'
+import { treemap, hierarchy, treemapSquarify, type HierarchyRectangularNode } from 'd3-hierarchy'
 import { formatSize, sizeColor } from '../lib/format'
 import { ContextMenu } from './ContextMenu'
 import type { EntryNode } from '../lib/types'
+
+type TreemapDatum = EntryNode & { value: number }
 
 interface TreemapProps {
   entries: EntryNode[]
@@ -40,20 +42,19 @@ export function Treemap({ entries, parentSize, onNavigate, onRefresh }: TreemapP
         ...e,
         value: e.size
       }))
-    }
+    } as unknown as TreemapDatum
 
-    const h = hierarchy(root)
-      .sum((d: any) => d.value || 0)
+    const h = hierarchy<TreemapDatum>(root)
+      .sum((d) => d.value || 0)
       .sort((a, b) => (b.value || 0) - (a.value || 0))
 
-    const layout = treemap<any>()
+    treemap<TreemapDatum>()
       .size([dims.width, dims.height])
       .padding(2)
       .round(true)
-      .tile(treemapSquarify)
+      .tile(treemapSquarify)(h)
 
-    layout(h)
-    return h.leaves()
+    return h.leaves() as HierarchyRectangularNode<TreemapDatum>[]
   }, [entries, dims])
 
   const handleClick = useCallback((entry: EntryNode) => {
@@ -76,7 +77,7 @@ export function Treemap({ entries, parentSize, onNavigate, onRefresh }: TreemapP
 
       <svg width={dims.width} height={dims.height}>
         {nodes.map((node) => {
-          const d = node.data as EntryNode & { value: number }
+          const d = node.data
           const w = node.x1 - node.x0
           const h = node.y1 - node.y0
           if (w < 2 || h < 2) return null
@@ -141,9 +142,9 @@ export function Treemap({ entries, parentSize, onNavigate, onRefresh }: TreemapP
       </svg>
 
       {hovered && (() => {
-        const node = nodes.find((n) => (n.data as any).path === hovered)
+        const node = nodes.find((n) => n.data.path === hovered)
         if (!node) return null
-        const d = node.data as EntryNode
+        const d = node.data
         const ratio = parentSize > 0 ? d.size / parentSize : 0
 
         return (
