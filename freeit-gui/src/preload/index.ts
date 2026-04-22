@@ -1,12 +1,36 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { homedir } from 'node:os'
-import type { ScanOptions, ScanMessage } from '../main/types'
+import type {
+  ScanOptions,
+  ScanMessage,
+  DupesOptions,
+  DupesMessage,
+  StaleOptions,
+  StaleMessage,
+  CleanOptions,
+  CleanMessage
+} from '../main/types'
 
 export interface FreeitAPI {
   scan: {
     start: (options: ScanOptions) => Promise<void>
     cancel: () => Promise<void>
     onMessage: (callback: (msg: ScanMessage) => void) => () => void
+  }
+  dupes: {
+    start: (options: DupesOptions) => Promise<void>
+    cancel: () => Promise<void>
+    onMessage: (callback: (msg: DupesMessage) => void) => () => void
+  }
+  stale: {
+    start: (options: StaleOptions) => Promise<void>
+    cancel: () => Promise<void>
+    onMessage: (callback: (msg: StaleMessage) => void) => () => void
+  }
+  clean: {
+    start: (options: CleanOptions) => Promise<void>
+    cancel: () => Promise<void>
+    onMessage: (callback: (msg: CleanMessage) => void) => () => void
   }
   fs: {
     showInFinder: (path: string) => Promise<void>
@@ -32,6 +56,39 @@ const api: FreeitAPI = {
       }
       ipcRenderer.on('scan:message', handler)
       return () => ipcRenderer.removeListener('scan:message', handler)
+    }
+  },
+  dupes: {
+    start: (options: DupesOptions) => ipcRenderer.invoke('dupes:start', options),
+    cancel: () => ipcRenderer.invoke('dupes:cancel'),
+    onMessage: (callback: (msg: DupesMessage) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, msg: DupesMessage): void => {
+        callback(msg)
+      }
+      ipcRenderer.on('dupes:message', handler)
+      return () => ipcRenderer.removeListener('dupes:message', handler)
+    }
+  },
+  stale: {
+    start: (options: StaleOptions) => ipcRenderer.invoke('stale:start', options),
+    cancel: () => ipcRenderer.invoke('stale:cancel'),
+    onMessage: (callback: (msg: StaleMessage) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, msg: StaleMessage): void => {
+        callback(msg)
+      }
+      ipcRenderer.on('stale:message', handler)
+      return () => ipcRenderer.removeListener('stale:message', handler)
+    }
+  },
+  clean: {
+    start: (options: CleanOptions) => ipcRenderer.invoke('clean:start', options),
+    cancel: () => ipcRenderer.invoke('clean:cancel'),
+    onMessage: (callback: (msg: CleanMessage) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, msg: CleanMessage): void => {
+        callback(msg)
+      }
+      ipcRenderer.on('clean:message', handler)
+      return () => ipcRenderer.removeListener('clean:message', handler)
     }
   },
   fs: {
