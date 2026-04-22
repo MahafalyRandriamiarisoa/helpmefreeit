@@ -1,0 +1,276 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Inter';
+  src: local('Inter');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono');
+}
+
+:root {
+  --bg-base: #0a0a0b;
+  --bg-surface: #111214;
+  --bg-raised: #1a1b1e;
+  --bg-hover: #222327;
+  --bg-selected: #1c2a22;
+
+  --border-dim: #1e1f23;
+  --border-normal: #2d2e33;
+
+  --text-primary: #e4e4e7;
+  --text-secondary: #a1a1aa;
+  --text-dim: #52525b;
+
+  --accent: #10b981;
+  --accent-hover: #34d399;
+  --accent-dim: #065f46;
+
+  --color-size-huge: #ef4444;
+  --color-size-large: #f87171;
+  --color-size-medium: #eab308;
+  --color-size-normal: #22d3ee;
+  --color-size-small: #10b981;
+  --color-size-tiny: #52525b;
+
+  --color-bar-critical: #ef4444;
+  --color-bar-warning: #eab308;
+  --color-bar-info: #22d3ee;
+  --color-bar-ok: #10b981;
+
+  --titlebar-h: 52px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  user-select: none;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-normal);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
+
+.mono {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.15s ease-out;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* ---------- Shared button styles ---------- */
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.btn-icon:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.btn-icon:disabled {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}
+
+.btn-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  border: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.btn-pill:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.btn-pill[data-active="true"] {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+.btn-pill[data-active="true"]:hover {
+  background: var(--accent-dim);
+  color: var(--accent-hover);
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  background: var(--accent);
+  color: #000;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-ghost {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.btn-ghost:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ---------- Explorer table rows ---------- */
+.explorer-row {
+  transition: background 0.1s;
+}
+.explorer-row:hover {
+  background: var(--bg-hover);
+}
+.explorer-row[data-selected="true"] {
+  background: var(--bg-selected);
+}
+
+/* ---------- Context menu items ---------- */
+.ctx-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 12px;
+  font-size: 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.ctx-item:hover {
+  background: var(--bg-hover);
+}
+.ctx-item[data-danger="true"] {
+  color: var(--color-size-huge);
+}
+.ctx-item[data-danger="true"]:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ---------- View mode toggle ---------- */
+.view-toggle-btn {
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.view-toggle-btn:hover {
+  color: var(--text-secondary);
+}
+.view-toggle-btn[data-active="true"] {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ---------- Search input ---------- */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  transition: border-color 0.12s;
+}
+.search-box:focus-within {
+  border-color: var(--border-normal);
+}
+.search-box input {
+  background: transparent;
+  outline: none;
+  font-size: 11px;
+  color: var(--text-primary);
+  width: 120px;
+}
+
+/* ---------- Separator ---------- */
+.sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border-dim);
+  flex-shrink: 0;
+}

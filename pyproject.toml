@@ -1,0 +1,24 @@
+[project]
+name = "helpmefreeit"
+version = "0.1.0"
+description = "Visualise disk usage and find large files/directories to free up space"
+authors = [
+    {name = "mrandriamiarisoa"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "click>=8.1",
+    "rich>=13.0",
+]
+
+[project.scripts]
+helpmefreeit = "helpmefreeit.cli:main"
+freeit = "helpmefreeit.cli:main"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [{include = "helpmefreeit"}]
