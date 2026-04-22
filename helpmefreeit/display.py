@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 from rich.tree import Tree
 
+from .dupes import DupeGroup
 from .scanner import Entry
+from .stale import StaleFile
 
 console = Console()
 
@@ -220,3 +223,153 @@ def _add_tree_children(
             )
         else:
             tree.add(label)
+
+
+# ---------------------------------------------------------------------------
+# Doublons
+# ---------------------------------------------------------------------------
+def display_dupes(groups: list[DupeGroup]) -> None:
+    """Affiche les groupes de doublons au format Rich.
+
+    Format par groupe :
+        🗎  854 MB × 3 copies  (récup. 1.7 GB)
+            ~/Downloads/foo.mp4
+            ~/Movies/foo.mp4
+            ~/Desktop/foo copy.mp4
+    """
+    console.print()
+
+    if not groups:
+        console.print("  [green]Aucun doublon trouvé.[/green]")
+        console.print()
+        return
+
+    total_recoverable = sum(g.recoverable_bytes for g in groups)
+
+    for g in groups:
+        size_color = _size_color(g.size)
+        recov_color = _size_color(g.recoverable_bytes)
+        copies = len(g.paths)
+        console.print(
+            f"  🗎  [{size_color}]{format_size(g.size)}[/{size_color}] "
+            f"× [bold]{copies}[/bold] copies  "
+            f"[dim](récup.[/dim] [{recov_color}]{format_size(g.recoverable_bytes)}[/{recov_color}][dim])[/dim]"
+        )
+        for p in g.paths:
+            console.print(f"      [dim]{p}[/dim]")
+        console.print()
+
+    console.print(
+        f"  [bold]Total récupérable :[/bold] "
+        f"[bright_white]{format_size(total_recoverable)}[/bright_white] "
+        f"[dim]({len(groups)} groupes)[/dim]"
+    )
+    console.print()
+
+
+# ---------------------------------------------------------------------------
+# Fichiers anciens et volumineux
+# ---------------------------------------------------------------------------
+def display_stale(files: list[StaleFile]) -> None:
+    """Affiche la liste des fichiers stale (vieux + gros) en tableau Rich."""
+    console.print()
+
+    if not files:
+        console.print("  [green]Aucun fichier ne répond aux critères.[/green]")
+        console.print()
+        return
+
+    table = Table(
+        title=f"  {len(files)} fichiers anciens et volumineux",
+        title_style="bold white",
+        title_justify="left",
+        show_header=True,
+        header_style="bold bright_white",
+        border_style="bright_black",
+        pad_edge=False,
+        box=None,
+        padding=(0, 1),
+    )
+    table.add_column("Âge", justify="right", width=6, no_wrap=True)
+    table.add_column("Taille", justify="right", width=9, no_wrap=True)
+    table.add_column("Chemin", no_wrap=False)
+
+    for f in files:
+        age_text = Text(f"{f.age_days}j", style="yellow" if f.age_days >= 180 else "cyan")
+        size_text = Text(format_size(f.size), style=_size_color(f.size))
+        table.add_row(age_text, size_text, Text(str(f.path), style="dim"))
+
+    total = sum(f.size for f in files)
+    console.print(table)
+    console.print()
+    console.print(
+        f"  [bold]Total :[/bold] "
+        f"[bright_white]{format_size(total)}[/bright_white] "
+        f"[dim]sur {len(files)} fichiers[/dim]"
+    )
+    console.print()
+
+
+# ---------------------------------------------------------------------------
+# Préréglages junk (clean)
+# ---------------------------------------------------------------------------
+def display_presets(summaries: list[dict[str, Any]]) -> None:
+    """Affiche la liste des préréglages avec taille estimée par preset.
+
+    ``summaries`` est une liste de dicts produits par ``cli._preset_to_summary`` :
+    ``{id, label, description, safe, min_age_days, count, total_bytes, paths}``.
+    """
+    console.print()
+
+    if not summaries:
+        console.print("  [yellow]Aucun preset à afficher.[/yellow]")
+        console.print()
+        return
+
+    table = Table(
+        title="  Préréglages de nettoyage",
+        title_style="bold white",
+        title_justify="left",
+        show_header=True,
+        header_style="bold bright_white",
+        border_style="bright_black",
+        pad_edge=False,
+        box=None,
+        padding=(0, 1),
+    )
+    table.add_column("", width=2, no_wrap=True)
+    table.add_column("ID", no_wrap=True, style="cyan")
+    table.add_column("Libellé", no_wrap=False)
+    table.add_column("Taille", justify="right", width=9, no_wrap=True)
+    table.add_column("Chemins", justify="right", width=8, no_wrap=True)
+    table.add_column("Sûr", width=5, no_wrap=True)
+
+    total = 0
+    for s in summaries:
+        total_bytes = s["total_bytes"]
+        total += total_bytes
+        icon = "🗑" if s["safe"] else "⚠"
+        size_text = Text(format_size(total_bytes), style=_size_color(total_bytes))
+        safe_text = (
+            Text("oui", style="green") if s["safe"] else Text("non", style="yellow")
+        )
+        table.add_row(
+            icon,
+            s["id"],
+            s["label"],
+            size_text,
+            str(s["count"]),
+            safe_text,
+        )
+
+    console.print(table)
+    console.print()
+    console.print(
+        f"  [bold]Total récupérable :[/bold] "
+        f"[bright_white]{format_size(total)}[/bright_white] "
+        f"[dim]({len(summaries)} presets)[/dim]"
+    )
+    console.print(
+        "  [dim]Utilise la GUI pour confirmer et mettre à la corbeille.[/dim]"
+    )
+    console.print()
